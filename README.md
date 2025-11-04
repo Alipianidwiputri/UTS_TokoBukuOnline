@@ -9,7 +9,7 @@
 
 
 
-Untuk: Masuk ke aplikasi
+**Untuk: Masuk ke aplikasi**
 
 - Isi email & password
 - Klik Login
@@ -77,14 +77,15 @@ Lihat salam sesuai waktu (pagi/siang/sore)
 
 
 
-Yang Ditampilkan:
+**Yang Ditampilkan:**
+
 - Nomor Pesanan
 
 - Total Bayar
 
 - Status
 
-Data yang Disimpan:
+**Data yang Disimpan:**
 
 - Alamat pengiriman - tempat kirim buku
 
