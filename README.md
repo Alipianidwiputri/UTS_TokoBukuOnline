@@ -2,8 +2,7 @@
 
 # Penjelasan Halaman Web Aplikasi
 
-**Tampilan 1**
-**LOGIN**
+# Tampilan 1 (LOGIN)
 
 Untuk: Masuk ke aplikasi
 
@@ -11,7 +10,7 @@ Untuk: Masuk ke aplikasi
 - Klik Login
 - Bisa daftar atau lupa password lewat popup
 
-# Tampilan 1 (DASHBOARD)
+# Tampilan 2 (DASHBOARD)
 
 **Menu utama setelah login:**
 
@@ -27,7 +26,7 @@ Lihat salam sesuai waktu (pagi/siang/sore)
 
 - Laporan
 
-# Tampilan 2 (KATALOG/STOK BUKU)
+# Tampilan 3 (KATALOG/STOK BUKU)
 
 **Fitur:**
 
@@ -39,7 +38,7 @@ Lihat salam sesuai waktu (pagi/siang/sore)
 
 - + Keranjang - tambah ke cart
  
-# Tampilan 3 (PROSES BELI)
+# Tampilan 4 (PROSES BELI)
 
 **Langkah:**
 
@@ -51,8 +50,7 @@ Lihat salam sesuai waktu (pagi/siang/sore)
 
 - Klik "Bayar Sekarang" - dapat nomor pesanan
 
-**Tampilan 1*
-**TRACKING**
+# Tampilan 5 (TRACKING)
 
 **Untuk: Lacak pesanan**
 
@@ -62,8 +60,7 @@ Lihat salam sesuai waktu (pagi/siang/sore)
 
 - Ada progress bar & detail pengiriman
 
-**Tampilan 1**
-**HISTORY TRANSAKSI**
+# Tampilan 5 (HISTORY TRANSAKSI)
 
 **Isi: Riwayat semua pembelian**
 
@@ -73,8 +70,7 @@ Lihat salam sesuai waktu (pagi/siang/sore)
 
 - Bisa track pesanan dari sini
 
-**Tampilan 1**
-**LAPORAN PEMESANAN**
+# Tampilan 6 (LAPORAN PEMESANAN)
 
 **Statistik penjualan:**
 
