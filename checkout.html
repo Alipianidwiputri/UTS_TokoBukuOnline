@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Toko Buku Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛒 Checkout</h1>
+            <nav>
+                <a href="dashboard.html" class="btn-secondary">🏠 Dashboard</a>
+                <a href="stok.html" class="btn-secondary">📚 Lanjut Belanja</a>
+                <button id="logoutBtn" class="btn-secondary">🚪 Logout</button>
+            </nav>
+        </header>
+        
+        <main>
+            <h2>💝 Pesanan Anda</h2>
+            
+            <div class="checkout-container">
+                <div class="order-summary">
+                    <h3>📦 Ringkasan Pesanan</h3>
+                    <div id="orderItems">
+                    </div>
+                    <div class="order-total">
+                        <p><strong>Total: </strong><span id="totalAmount">Rp 0</span></p>
+                    </div>
+                    <button onclick="clearCart()" class="btn-secondary" style="margin-top: 15px; width: 100%;">
+                        🗑️ Kosongkan Keranjang
+                    </button>
+                </div>
+                
+                <div class="customer-info">
+                    <h3>👤 Informasi Pemesan</h3>
+                    <form id="customerForm">
+                        <div class="form-group">
+                            <label for="nama">Nama Lengkap</label>
+                            <input type="text" id="nama" required value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" required value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="telepon">No. Telepon</label>
+                            <input type="tel" id="telepon" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="alamat">Alamat Pengiriman</label>
+                            <textarea id="alamat" required rows="4"></textarea>
+                        </div>
+                        
+                        <h3>💳 Informasi Pembayaran</h3>
+                        <div class="form-group">
+                            <label for="metodePembayaran">Metode Pembayaran</label>
+                            <select id="metodePembayaran" required>
+                                <option value="">Pilih Metode</option>
+                                <option value="transfer">🏦 Transfer Bank</option>
+                                <option value="kartu">💳 Kartu Kredit/Debit</option>
+                                <option value="cod">📦 COD (Bayar di Tempat)</option>
+                                <option value="ewallet">📱 E-Wallet</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary" style="width: 100%; padding: 15px; font-size: 18px;">
+                            🎀 Bayar Sekarang
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+        
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        document.getElementById('nama').value = currentUser.nama;
+        document.getElementById('email').value = currentUser.email;
+        
+        function displayOrderItems() {
+            const orderContainer = document.getElementById('orderItems');
+            orderContainer.innerHTML = '';
+            
+            let total = 0;
+            
+            if (cart.length === 0) {
+                orderContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <p style="font-size: 18px; margin-bottom: 10px;">😔 Keranjang kosong</p>
+                        <p>Silakan tambah buku ke keranjang terlebih dahulu</p>
+                        <a href="stok.html" class="btn-primary" style="margin-top: 15px; display: inline-block;">
+                            🛍️ Belanja Sekarang
+                        </a>
+                    </div>
+                `;
+                document.getElementById('totalAmount').textContent = formatRupiah(0);
+                return;
+            }
+            
+            cart.forEach((item, index) => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'order-item';
+                itemElement.innerHTML = `
+                    <div class="item-info">
+                        <h4>${item.nama}</h4>
+                        <p>${item.qty} x ${formatRupiah(item.harga)}</p>
+                        <button onclick="removeFromCart(${index})" class="btn-link" style="color: #ff4757; font-size: 12px;">
+                            ❌ Hapus
+                        </button>
+                    </div>
+                    <div class="item-total">
+                        ${formatRupiah(item.harga * item.qty)}
+                    </div>
+                `;
+                orderContainer.appendChild(itemElement);
+                
+                total += item.harga * item.qty;
+            });
+            
+            document.getElementById('totalAmount').textContent = formatRupiah(total);
+        }
+        
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            displayOrderItems();
+            showNotification('Item dihapus dari keranjang', 'info');
+        }
+        
+        function clearCart() {
+            if (confirm('Yakin ingin mengosongkan keranjang?')) {
+                cart = [];
+                localStorage.setItem('cart', JSON.stringify(cart));
+                displayOrderItems();
+                showNotification('Keranjang dikosongkan', 'info');
+            }
+        }
+        
+        document.getElementById('customerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (cart.length === 0) {
+                alert('Keranjang masih kosong! Silakan tambah buku terlebih dahulu.');
+                return;
+            }
+            
+            const nama = document.getElementById('nama').value;
+            const email = document.getElementById('email').value;
+            const telepon = document.getElementById('telepon').value;
+            const alamat = document.getElementById('alamat').value;
+            const metodePembayaran = document.getElementById('metodePembayaran').value;
+            
+            if (!nama || !email || !telepon || !alamat || !metodePembayaran) {
+                alert('Harap lengkapi semua data!');
+                return;
+            }
+            
+            const orderNumber = generateOrderNumber();
+            const totalAmount = cart.reduce((sum, item) => sum + (item.harga * item.qty), 0);
+            
+            const transactionData = {
+                orderNumber: orderNumber,
+                customerInfo: {
+                    nama: nama,
+                    email: email,
+                    telepon: telepon,
+                    alamat: alamat
+                },
+                items: [...cart],
+                totalAmount: formatRupiah(totalAmount),
+                metodePembayaran: metodePembayaran,
+                tanggal: new Date().toLocaleString('id-ID'),
+                status: 'Berhasil'
+            };
+            
+            saveTransaction(transactionData);
+            
+            alert(`🎉 Pesanan berhasil diproses!\n\nNomor Pesanan: ${orderNumber}\nTotal: ${formatRupiah(totalAmount)}\n\nSimpan nomor pesanan ini untuk tracking pengiriman!`);
+            
+            cart = [];
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+            document.getElementById('customerForm').reset();
+            document.getElementById('nama').value = currentUser.nama;
+            document.getElementById('email').value = currentUser.email;
+            
+            displayOrderItems();
+        });
+       
+        function generateOrderNumber() {
+            return 'ORD' + Math.floor(100000 + Math.random() * 900000);
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+        
+        displayOrderItems();
+    </script>
+</body>
+</html>

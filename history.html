@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Transaksi - Toko Buku Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 History Transaksi</h1>
+            <nav>
+                <a href="dashboard.html" class="btn-secondary">🏠 Dashboard</a>
+                <button id="logoutBtn" class="btn-secondary">🚪 Logout</button>
+            </nav>
+        </header>
+        
+        <main>
+            <h2>📊 Riwayat Transaksi Anda</h2>
+            
+            <div id="transactionHistory" class="transaction-history">
+            </div>
+        </main>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+      
+        function displayTransactionHistory() {
+            const historyContainer = document.getElementById('transactionHistory');
+            const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            
+            if (transactions.length === 0) {
+                historyContainer.innerHTML = `
+                    <div class="no-transactions">
+                        <div style="text-align: center; padding: 50px; color: #666;">
+                            <p style="font-size: 20px; margin-bottom: 15px;">😴 Belum ada transaksi</p>
+                            <p>Anda belum melakukan transaksi apapun.</p>
+                            <a href="stok.html" class="btn-primary" style="margin-top: 20px; display: inline-block;">
+                                🛍️ Mulai Belanja
+                            </a>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            transactions.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+            
+            historyContainer.innerHTML = `
+                <div class="transactions-list">
+                    ${transactions.map(transaction => `
+                        <div class="transaction-card">
+                            <div class="transaction-header">
+                                <h3>🛒 Pesanan #${transaction.orderNumber}</h3>
+                                <span class="transaction-date">${transaction.tanggal}</span>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="detail-row">
+                                    <strong>Status:</strong> 
+                                    <span class="status status-success">${transaction.status}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <strong>Total:</strong> ${transaction.totalAmount}
+                                </div>
+                                <div class="detail-row">
+                                    <strong>Metode Pembayaran:</strong> ${transaction.metodePembayaran}
+                                </div>
+                                <div class="transaction-items">
+                                    <strong>Items:</strong>
+                                    <ul>
+                                        ${transaction.items.map(item => `
+                                            <li>${item.nama} (${item.qty} x ${formatRupiah(item.harga)})</li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="transaction-actions">
+                                <button onclick="trackOrder('${transaction.orderNumber}')" class="btn-secondary">
+                                    🚚 Track Pengiriman
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        function trackOrder(orderNumber) {
+            localStorage.setItem('lastTrackingNumber', orderNumber);
+            window.location.href = 'tracking.html';
+        }
+        
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+        
+        displayTransactionHistory();
+    </script>
+</body>
+</html>

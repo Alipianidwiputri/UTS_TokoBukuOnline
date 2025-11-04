@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking - Toko Buku Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚚 Tracking Pengiriman</h1>
+            <nav>
+                <a href="dashboard.html" class="btn-secondary">🏠 Dashboard</a>
+                <button id="logoutBtn" class="btn-secondary">🚪 Logout</button>
+            </nav>
+        </header>
+        
+        <main>
+            <h2>📦 Lacak Pesanan Anda</h2>
+            
+            <div class="tracking-form">
+                <form id="trackingForm">
+                    <div class="form-group">
+                        <label for="nomorDO">Nomor Delivery Order / Nomor Pesanan</label>
+                        <input type="text" id="nomorDO" placeholder="Masukkan nomor DO atau nomor pesanan (contoh: 20230012 atau ORD117273)" required>
+                    </div>
+                    <button type="submit" class="btn-primary">🔍 Cari</button>
+                </form>
+            </div>
+            
+            <div id="trackingResult" class="tracking-result">
+                <!-- Tracking result will be displayed here -->
+                <div class="tracking-info">
+                    <h3>💡 Informasi Tracking</h3>
+                    <p>Anda dapat melacak pesanan menggunakan:</p>
+                    <ul>
+                        <li><strong>Nomor DO dari data contoh:</strong> 20230012 atau 20230013</li>
+                        <li><strong>Nomor pesanan baru:</strong> ORDxxxxxx (akan dibuat setelah checkout)</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        // Check if user is logged in
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+        
+        // Search tracking
+        document.getElementById('trackingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nomorDO = document.getElementById('nomorDO').value.trim();
+            const trackingData = getTrackingData(nomorDO);
+            
+            const resultContainer = document.getElementById('trackingResult');
+            
+            if (trackingData) {
+                let statusClass = '';
+                if (trackingData.status === 'Diproses') {
+                    statusClass = 'status-sent';
+                } else if (trackingData.status === 'Dikemas') {
+                    statusClass = 'status-sent';
+                } else if (trackingData.status === 'Dikirim') {
+                    statusClass = 'status-in-transit';
+                } else if (trackingData.status === 'Dalam Perjalanan') {
+                    statusClass = 'status-in-transit';
+                } else if (trackingData.status === 'Selesai') {
+                    statusClass = 'status-delivered';
+                }
+                
+                let progressHTML = '';
+                if (trackingData.perjalanan && trackingData.perjalanan.length > 0) {
+                    progressHTML = `
+                        <div class="progress-container">
+                            <h3>Status Pengiriman</h3>
+                            <div class="progress-bar">
+                                <div class="progress ${statusClass}"></div>
+                            </div>
+                            <div class="progress-steps">
+                                ${trackingData.perjalanan.map(step => `
+                                    <div class="progress-step">
+                                        <div class="step-time">${step.waktu}</div>
+                                        <div class="step-desc">${step.keterangan}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                resultContainer.innerHTML = `
+                    <div class="tracking-details">
+                        <h3>✅ Data Ditemukan</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <strong>Nomor DO/Pesanan:</strong> ${trackingData.nomorDO}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Nama Pemesan:</strong> ${trackingData.nama}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Status:</strong> <span class="status ${statusClass}">${trackingData.status}</span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>Ekspedisi:</strong> ${trackingData.ekspedisi}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Tanggal Kirim:</strong> ${trackingData.tanggalKirim}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Jenis Paket:</strong> ${trackingData.paket}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Total Pembayaran:</strong> ${trackingData.total}
+                            </div>
+                        </div>
+                        ${progressHTML}
+                    </div>
+                `;
+            } else {
+                resultContainer.innerHTML = `
+                    <div class="no-result">
+                        <h3>❌ Data Tidak Ditemukan</h3>
+                        <p>Nomor Delivery Order/Pesanan "<strong>${nomorDO}</strong>" tidak ditemukan.</p>
+                        <p>Pastikan Anda memasukkan nomor yang benar. Contoh nomor yang valid:</p>
+                        <ul>
+                            <li><strong>20230012</strong> - Data contoh dari sistem</li>
+                            <li><strong>20230013</strong> - Data contoh dari sistem</li>
+                            <li><strong>ORD117273</strong> - Nomor pesanan baru setelah checkout</li>
+                        </ul>
+                        <p>Jika Anda baru saja melakukan pemesanan, nomor pesanan akan muncul setelah proses checkout selesai.</p>
+                    </div>
+                `;
+            }
+        });
+        
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

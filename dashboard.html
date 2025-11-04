@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Toko Buku Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Toko Buku Online</h1>
+            <div id="userInfo">
+                <span id="greeting"></span>
+                <button id="logoutBtn" class="btn-secondary">Logout</button>
+            </div>
+        </header>
+        
+        <main class="dashboard">
+            <h2>Menu Utama</h2>
+<div class="menu-grid">
+    <a href="stok.html" class="menu-card">
+        <h3>📚 Informasi Stok/Katalog</h3>
+        <p>Lihat dan kelola katalog buku lucu kami</p>
+    </a>
+    <a href="tracking.html" class="menu-card">
+        <h3>🚚 Tracking Pengiriman</h3>
+        <p>Lacak status pengiriman buku pesanan Anda</p>
+    </a>
+    <a href="history.html" class="menu-card">
+        <h3>📊 History Transaksi</h3>
+        <p>Lihat riwayat transaksi pembelian Anda</p>
+    </a>
+    <a href="laporan.html" class="menu-card">
+        <h3>📈 Laporan Pemesanan</h3>
+        <p>Lihat laporan dan statistik pemesanan</p>
+    </a>
+</div>
+        </main>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+        
+        const hour = new Date().getHours();
+        let greeting = '';
+        
+        if (hour < 12) {
+            greeting = 'Selamat Pagi';
+        } else if (hour < 15) {
+            greeting = 'Selamat Siang';
+        } else if (hour < 19) {
+            greeting = 'Selamat Sore';
+        } else {
+            greeting = 'Selamat Malam';
+        }
+        
+        document.getElementById('greeting').textContent = `${greeting}, ${currentUser.nama}`;
+        
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

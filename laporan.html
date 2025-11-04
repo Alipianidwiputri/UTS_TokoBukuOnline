@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Pemesanan - Toko Buku Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Laporan Pemesanan</h1>
+            <nav>
+                <a href="dashboard.html" class="btn-secondary">🏠 Dashboard</a>
+                <button id="logoutBtn" class="btn-secondary">🚪 Logout</button>
+            </nav>
+        </header>
+        
+        <main>
+            <h2>📊 Laporan dan Statistik Pemesanan</h2>
+            
+            <div class="report-summary">
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-icon">🛒</div>
+                        <div class="summary-info">
+                            <h3>Total Transaksi</h3>
+                            <span id="totalTransactions">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">💰</div>
+                        <div class="summary-info">
+                            <h3>Total Pendapatan</h3>
+                            <span id="totalRevenue">Rp 0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">📚</div>
+                        <div class="summary-info">
+                            <h3>Buku Terjual</h3>
+                            <span id="totalBooksSold">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">⭐</div>
+                        <div class="summary-info">
+                            <h3>Buku Populer</h3>
+                            <span id="popularBook">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-controls">
+                <div class="filter-group">
+                    <label for="dateFilter">Filter Berdasarkan:</label>
+                    <select id="dateFilter" onchange="filterReports()">
+                        <option value="all">Semua Waktu</option>
+                        <option value="today">Hari Ini</option>
+                        <option value="week">Minggu Ini</option>
+                        <option value="month">Bulan Ini</option>
+                    </select>
+                </div>
+                <button onclick="exportToPDF()" class="btn-primary">📄 Export PDF</button>
+            </div>
+
+            <div class="report-content">
+                <div class="report-section">
+                    <h3>📋 Detail Transaksi</h3>
+                    <div id="transactionDetails" class="transaction-details">
+                        <!-- Transaction details will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="report-charts">
+                    <div class="chart-container">
+                        <h3>📈 Grafik Penjualan Bulan Ini</h3>
+                        <canvas id="salesChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>🍩 Kategori Buku Terjual</h3>
+                        <canvas id="categoryChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Include Chart.js for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        // Check if user is logged in
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+
+        let salesChart, categoryChart;
+
+        // Display reports
+        function displayReports(filter = 'all') {
+            const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            
+            // Filter transactions based on date
+            const filteredTransactions = filterTransactions(transactions, filter);
+            
+            updateSummaryCards(filteredTransactions);
+            updateTransactionDetails(filteredTransactions);
+            updateCharts(filteredTransactions);
+        }
+
+        // Filter transactions by date
+        function filterTransactions(transactions, filter) {
+            const now = new Date();
+            
+            switch(filter) {
+                case 'today':
+                    return transactions.filter(transaction => {
+                        const transactionDate = new Date(transaction.tanggal);
+                        return transactionDate.toDateString() === now.toDateString();
+                    });
+                
+                case 'week':
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    return transactions.filter(transaction => {
+                        const transactionDate = new Date(transaction.tanggal);
+                        return transactionDate >= weekAgo;
+                    });
+                
+                case 'month':
+                    const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
+                    return transactions.filter(transaction => {
+                        const transactionDate = new Date(transaction.tanggal);
+                        return transactionDate >= monthAgo;
+                    });
+                
+                default:
+                    return transactions;
+            }
+        }
+
+        // Update summary cards
+        function updateSummaryCards(transactions) {
+            // Total transactions
+            document.getElementById('totalTransactions').textContent = transactions.length;
+            
+            // Total revenue
+            const totalRevenue = transactions.reduce((sum, transaction) => {
+                const amount = parseInt(transaction.totalAmount.replace(/[^\d]/g, ''));
+                return sum + amount;
+            }, 0);
+            document.getElementById('totalRevenue').textContent = formatRupiah(totalRevenue);
+            
+            // Total books sold
+            const totalBooksSold = transactions.reduce((sum, transaction) => {
+                return sum + transaction.items.reduce((itemSum, item) => itemSum + item.qty, 0);
+            }, 0);
+            document.getElementById('totalBooksSold').textContent = totalBooksSold;
+            
+            // Popular book
+            const bookSales = {};
+            transactions.forEach(transaction => {
+                transaction.items.forEach(item => {
+                    bookSales[item.nama] = (bookSales[item.nama] || 0) + item.qty;
+                });
+            });
+            
+            const popularBook = Object.keys(bookSales).reduce((a, b) => 
+                bookSales[a] > bookSales[b] ? a : b, 'Tidak ada data'
+            );
+            document.getElementById('popularBook').textContent = popularBook;
+        }
+
+        // Update transaction details
+        function updateTransactionDetails(transactions) {
+            const container = document.getElementById('transactionDetails');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <p>📭 Tidak ada data transaksi</p>
+                        <p>Belum ada transaksi yang tercatat untuk periode ini.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="transactions-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No. Pesanan</th>
+                                <th>Tanggal</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${transactions.map(transaction => `
+                                <tr>
+                                    <td>${transaction.orderNumber}</td>
+                                    <td>${transaction.tanggal}</td>
+                                    <td>${transaction.customerInfo.nama}</td>
+                                    <td>
+                                        ${transaction.items.map(item => 
+                                            `${item.nama} (${item.qty})`
+                                        ).join(', ')}
+                                    </td>
+                                    <td>${transaction.totalAmount}</td>
+                                    <td>
+                                        <span class="status status-success">${transaction.status}</span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Update charts
+        function updateCharts(transactions) {
+            // Destroy existing charts if they exist
+            if (salesChart) salesChart.destroy();
+            if (categoryChart) categoryChart.destroy();
+            
+            // Sales chart data (last 7 days)
+            const last7Days = Array.from({length: 7}, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                return date.toLocaleDateString('id-ID', { weekday: 'short' });
+            }).reverse();
+            
+            const salesData = last7Days.map(day => {
+                const daySales = transactions.filter(transaction => {
+                    const transactionDate = new Date(transaction.tanggal);
+                    return transactionDate.toLocaleDateString('id-ID', { weekday: 'short' }) === day;
+                });
+                
+                return daySales.reduce((sum, transaction) => {
+                    return sum + parseInt(transaction.totalAmount.replace(/[^\d]/g, ''));
+                }, 0);
+            });
+            
+            // Sales Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            salesChart = new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: last7Days,
+                    datasets: [{
+                        label: 'Penjualan (Rp)',
+                        data: salesData,
+                        borderColor: '#ff6b9d',
+                        backgroundColor: 'rgba(255, 107, 157, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rp ' + value.toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Category chart data
+            const categories = {};
+            transactions.forEach(transaction => {
+                transaction.items.forEach(item => {
+                    // Extract category from book name or use default
+                    const category = item.nama.split(' ')[0] || 'Lainnya';
+                    categories[category] = (categories[category] || 0) + item.qty;
+                });
+            });
+            
+            // Category Chart
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categories),
+                    datasets: [{
+                        data: Object.values(categories),
+                        backgroundColor: [
+                            '#ff6b9d', '#ffa502', '#2ed573', '#ff4757', 
+                            '#3742fa', '#ffa502', '#7bed9f', '#70a1ff'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function filterReports() {
+            const filter = document.getElementById('dateFilter').value;
+            displayReports(filter);
+        }
+
+        function exportToPDF() {
+            alert('📄 Fitur export PDF akan mengunduh laporan dalam format PDF.\n\nFitur ini akan bekerja dengan backend yang sesuai.');
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+
+        displayReports();
+    </script>
+</body>
+</html>

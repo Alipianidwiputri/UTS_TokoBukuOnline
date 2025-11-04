@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stok Buku - Toko Buku Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Toko Buku Cute</h1>
+            <nav>
+                <a href="dashboard.html" class="btn-secondary">🏠 Dashboard</a>
+                <a href="checkout.html" class="btn-secondary">
+                    🛒 Keranjang
+                    <span id="cartCount" class="cart-count">0</span>
+                </a>
+                <button id="logoutBtn" class="btn-secondary">🚪 Logout</button>
+            </nav>
+        </header>
+        
+        <main>
+            <h2>✨ Katalog Buku Lucu</h2>
+            
+            <div class="add-book-form">
+                <h3>➕ Tambah Buku Baru</h3>
+                <form id="addBookForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="kodeBarang">Kode Barang</label>
+                            <input type="text" id="kodeBarang" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="namaBarang">Nama Barang</label>
+                            <input type="text" id="namaBarang" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="jenisBarang">Jenis Barang</label>
+                            <input type="text" id="jenisBarang" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edisi">Edisi</label>
+                            <input type="text" id="edisi" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="stok">Stok</label>
+                            <input type="number" id="stok" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="harga">Harga</label>
+                            <input type="text" id="harga" placeholder="Rp " required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="cover">URL Cover</label>
+                        <input type="text" id="cover" placeholder="img/nama-file.jpg">
+                    </div>
+                    <button type="submit" class="btn-primary">💖 Tambah Buku</button>
+                </form>
+            </div>
+            
+            <div id="bookCatalog" class="book-catalog">
+                <!-- Book cards will be populated by JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        // Check if user is logged in
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+        
+        // Initialize cart
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        // Update cart count
+        function updateCartCount() {
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cartCount').textContent = totalItems;
+        }
+        
+        // Display book catalog
+        function displayBooks() {
+            const catalogContainer = document.getElementById('bookCatalog');
+            catalogContainer.innerHTML = '';
+            
+            dataKatalogBuku.forEach(book => {
+                const bookCard = document.createElement('div');
+                bookCard.className = 'book-card';
+                bookCard.innerHTML = `
+                    <div class="book-cover">
+                        <img src="${book.cover}" alt="${book.namaBarang}" onerror="this.src='img/default-book.jpg'">
+                    </div>
+                    <div class="book-info">
+                        <h3>${book.namaBarang}</h3>
+                        <p><strong>📋 Kode:</strong> ${book.kodeBarang}</p>
+                        <p><strong>📖 Jenis:</strong> ${book.jenisBarang}</p>
+                        <p><strong>🔢 Edisi:</strong> ${book.edisi}</p>
+                        <p><strong>📦 Stok:</strong> ${book.stok}</p>
+                        <div class="book-price">${book.harga}</div>
+                        <div class="button-group">
+                            <button class="btn-buy" onclick="buyNow('${book.kodeBarang}')">
+                                🛍️ Beli Sekarang
+                            </button>
+                            <button class="btn-cart" onclick="addToCart('${book.kodeBarang}')">
+                                🛒 Tambah Keranjang
+                            </button>
+                        </div>
+                    </div>
+                `;
+                catalogContainer.appendChild(bookCard);
+            });
+        }
+        
+        // Buy now function
+        function buyNow(kodeBarang) {
+            const book = dataKatalogBuku.find(b => b.kodeBarang === kodeBarang);
+            if (book) {
+                // Add to cart and redirect to checkout
+                addToCart(kodeBarang);
+                setTimeout(() => {
+                    window.location.href = 'checkout.html';
+                }, 500);
+            }
+        }
+        
+        // Add to cart function
+        function addToCart(kodeBarang) {
+            const book = dataKatalogBuku.find(b => b.kodeBarang === kodeBarang);
+            if (book) {
+                const existingItem = cart.find(item => item.kode === kodeBarang);
+                
+                if (existingItem) {
+                    existingItem.qty += 1;
+                } else {
+                    cart.push({
+                        kode: book.kodeBarang,
+                        nama: book.namaBarang,
+                        harga: parseInt(book.harga.replace(/[^\d]/g, '')),
+                        qty: 1,
+                        cover: book.cover
+                    });
+                }
+                
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCount();
+                
+                // Show notification
+                showNotification(`"${book.namaBarang}" ditambahkan ke keranjang!`, 'success');
+            }
+        }
+        
+        // Add new book
+        document.getElementById('addBookForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newBook = {
+                kodeBarang: document.getElementById('kodeBarang').value,
+                namaBarang: document.getElementById('namaBarang').value,
+                jenisBarang: document.getElementById('jenisBarang').value,
+                edisi: document.getElementById('edisi').value,
+                stok: parseInt(document.getElementById('stok').value),
+                harga: document.getElementById('harga').value,
+                cover: document.getElementById('cover').value || 'img/default-book.jpg'
+            };
+            
+            dataKatalogBuku.push(newBook);
+            displayBooks();
+            
+            // Reset form
+            document.getElementById('addBookForm').reset();
+            
+            showNotification('Buku berhasil ditambahkan!', 'success');
+        });
+        
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        });
+        
+        // Initial display
+        displayBooks();
+        updateCartCount();
+    </script>
+</body>
+</html>
